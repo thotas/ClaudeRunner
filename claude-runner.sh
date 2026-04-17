@@ -390,3 +390,384 @@ run_claude() {
 
     echo "$output"
 }
+
+# ── Phase 1: Review & Enrich ─────────────────────────────────────────
+REVIEW_JSON=""
+
+phase_review() {
+    local task_file="$1"
+    local task_content
+    task_content="$(cat "$task_file")"
+
+    log_info "Phase 1: Reviewing task..."
+
+    local review_prompt_template
+    review_prompt_template="$(cat "$PROMPTS_DIR/review.md")"
+
+    local registry
+    registry="$(load_projects_registry)"
+
+    local review_prompt="${review_prompt_template//\{\{PROJECTS_REGISTRY\}\}/$registry}"
+
+    local full_prompt="$review_prompt
+
+## Task to Review
+$task_content"
+
+    local raw_output
+    raw_output="$(run_claude "$full_prompt")" || {
+        log_error "Phase 1: Claude Code failed"
+        log_error "Output: $raw_output"
+        return 1
+    }
+
+    log_debug "Phase 1 raw output: $raw_output"
+
+    local json_content
+    json_content="$(echo "$raw_output" | jq -r '.result // .' 2>/dev/null || echo "$raw_output")"
+
+    if echo "$json_content" | jq -e 'type == "string"' >/dev/null 2>&1; then
+        json_content="$(echo "$json_content" | jq -r '.')"
+    fi
+
+    if ! echo "$json_content" | jq -e '.project_name' >/dev/null 2>&1; then
+        log_error "Phase 1: Invalid JSON output from Claude"
+        log_error "Content: $json_content"
+        return 1
+    fi
+
+    REVIEW_JSON="$json_content"
+
+    local project_name
+    project_name="$(echo "$REVIEW_JSON" | jq -r '.project_name')"
+    local project_path
+    project_path="$(echo "$REVIEW_JSON" | jq -r '.project_path')"
+    local task_type
+    task_type="$(echo "$REVIEW_JSON" | jq -r '.task_type')"
+
+    if [ "$project_name" = "UNKNOWN" ]; then
+        log_error "Phase 1: Could not identify project from task description"
+        return 1
+    fi
+
+    project_path="${project_path/#\~/$HOME}"
+    REVIEW_JSON="$(echo "$REVIEW_JSON" | jq --arg p "$project_path" '.project_path = $p')"
+
+    if [ ! -d "$project_path" ]; then
+        log_error "Phase 1: Project path does not exist: $project_path"
+        return 1
+    fi
+
+    case "$task_type" in
+        bugfix|feature|refactor|code-review|security-review|testing|docs|research|build) ;;
+        *)
+            log_error "Phase 1: Unrecognized task type: $task_type"
+            return 1
+            ;;
+    esac
+
+    local summary
+    summary="$(echo "$REVIEW_JSON" | jq -r '.summary')"
+    local is_code_task
+    is_code_task="$(echo "$REVIEW_JSON" | jq -r '.is_code_task')"
+
+    log_info "Phase 1 complete: project=$project_name, type=$task_type, code_task=$is_code_task"
+    log_info "Summary: $summary"
+}
+
+# ── Phase 2: Execute ──────────────────────────────────────────────────
+EXECUTE_OUTPUT=""
+EXECUTE_EXIT_CODE=0
+
+phase_execute() {
+    log_info "Phase 2: Executing task..."
+
+    local project_name
+    project_name="$(echo "$REVIEW_JSON" | jq -r '.project_name')"
+    local project_path
+    project_path="$(echo "$REVIEW_JSON" | jq -r '.project_path')"
+    local task_type
+    task_type="$(echo "$REVIEW_JSON" | jq -r '.task_type')"
+    local is_code_task
+    is_code_task="$(echo "$REVIEW_JSON" | jq -r '.is_code_task')"
+    local branch_name
+    branch_name="$(echo "$REVIEW_JSON" | jq -r '.branch_name')"
+    local enriched_task
+    enriched_task="$(echo "$REVIEW_JSON" | jq -r '.enriched_task')"
+    local summary
+    summary="$(echo "$REVIEW_JSON" | jq -r '.summary')"
+    local task_guardrails_json
+    task_guardrails_json="$(echo "$REVIEW_JSON" | jq -c '.task_guardrails')"
+
+    local merged_guardrails
+    merged_guardrails="$(merge_guardrails "$project_name" "$task_guardrails_json")"
+
+    local execute_prompt
+    execute_prompt="$(cat "$PROMPTS_DIR/execute.md")"
+
+    execute_prompt="${execute_prompt//\{\{ENRICHED_TASK\}\}/$enriched_task}"
+    execute_prompt="${execute_prompt//\{\{TASK_TYPE\}\}/$task_type}"
+    execute_prompt="${execute_prompt//\{\{SUMMARY\}\}/$summary}"
+    execute_prompt="${execute_prompt//\{\{MERGED_GUARDRAILS\}\}/$merged_guardrails}"
+    execute_prompt="${execute_prompt//\{\{PROJECT_PATH\}\}/$project_path}"
+    execute_prompt="${execute_prompt//\{\{BRANCH_NAME\}\}/$branch_name}"
+
+    log_info "Executing in: $project_path"
+    log_info "Task type: $task_type (code_task=$is_code_task)"
+
+    if [ "$is_code_task" = "true" ]; then
+        log_info "Branch: $branch_name"
+    fi
+
+    EXECUTE_OUTPUT="$(run_claude "$execute_prompt" "$project_path")" || {
+        EXECUTE_EXIT_CODE=$?
+        log_error "Phase 2: Claude Code failed with exit code $EXECUTE_EXIT_CODE"
+    }
+
+    local output_lines
+    output_lines="$(echo "$EXECUTE_OUTPUT" | wc -l | tr -d ' ')"
+    log_info "Phase 2 complete: $output_lines lines of output (exit code: $EXECUTE_EXIT_CODE)"
+}
+
+# ── Phase 3: Report generation ────────────────────────────────────────
+REPORT_PATH=""
+
+phase_report() {
+    log_info "Phase 3: Generating report..."
+
+    local task_content
+    task_content="$(cat "$CURRENT_TASK_FILE" 2>/dev/null || echo "(task file unavailable)")"
+
+    local project_name
+    project_name="$(echo "$REVIEW_JSON" | jq -r '.project_name')"
+    local project_path
+    project_path="$(echo "$REVIEW_JSON" | jq -r '.project_path')"
+    local task_type
+    task_type="$(echo "$REVIEW_JSON" | jq -r '.task_type')"
+    local branch_name
+    branch_name="$(echo "$REVIEW_JSON" | jq -r '.branch_name // "N/A"')"
+    local summary
+    summary="$(echo "$REVIEW_JSON" | jq -r '.summary')"
+
+    local run_end_epoch
+    run_end_epoch="$(date '+%s')"
+    local duration_secs=$((run_end_epoch - RUN_START_EPOCH))
+    local duration
+    duration="$(format_duration $duration_secs)"
+
+    local status="success"
+    if [ "$EXECUTE_EXIT_CODE" -ne 0 ]; then
+        status="failure"
+    fi
+
+    local report_prompt
+    report_prompt="$(cat "$PROMPTS_DIR/report.md")"
+
+    local execution_log
+    execution_log="$(echo "$EXECUTE_OUTPUT" | jq -r '.result // .' 2>/dev/null || echo "$EXECUTE_OUTPUT")"
+    if echo "$execution_log" | jq -e 'type == "string"' >/dev/null 2>&1; then
+        execution_log="$(echo "$execution_log" | jq -r '.')"
+    fi
+
+    report_prompt="${report_prompt//\{\{ORIGINAL_TASK\}\}/$task_content}"
+    report_prompt="${report_prompt//\{\{PROJECT_NAME\}\}/$project_name}"
+    report_prompt="${report_prompt//\{\{PROJECT_PATH\}\}/$project_path}"
+    report_prompt="${report_prompt//\{\{TASK_TYPE\}\}/$task_type}"
+    report_prompt="${report_prompt//\{\{BRANCH_NAME\}\}/$branch_name}"
+    report_prompt="${report_prompt//\{\{STATUS\}\}/$status}"
+    report_prompt="${report_prompt//\{\{DURATION\}\}/$duration}"
+    report_prompt="${report_prompt//\{\{EXECUTION_LOG\}\}/$execution_log}"
+
+    local report_output
+    report_output="$(run_claude "$report_prompt")" || {
+        log_warn "Phase 3: Report generation failed"
+        report_output="# Task Report (auto-generated — report phase failed)
+
+## Raw Execution Output
+$execution_log"
+    }
+
+    local report_text
+    report_text="$(echo "$report_output" | jq -r '.result // .' 2>/dev/null || echo "$report_output")"
+    if echo "$report_text" | jq -e 'type == "string"' >/dev/null 2>&1; then
+        report_text="$(echo "$report_text" | jq -r '.')"
+    fi
+
+    REPORT_PATH="$REPORTS_DIR/${RUN_TIMESTAMP}-${project_name}-${task_type}.md"
+    echo "$report_text" > "$REPORT_PATH"
+    log_info "Report saved: $REPORT_PATH"
+
+    append_to_task "--- RUNNER OUTPUT ($RUN_DATE) ---
+Status: $status
+Project: $project_name ($project_path)
+Task type: $task_type
+Branch: $branch_name
+Duration: $duration
+Report: $(basename "$REPORT_PATH")
+Log: $(basename "$LOG_FILE")"
+
+    log_info "Phase 3 complete"
+}
+
+# ── Signal trapping ───────────────────────────────────────────────────
+cleanup() {
+    log_warn "Interrupted — cleaning up..."
+    restore_task
+    release_lock
+    exit 130
+}
+
+trap cleanup SIGINT SIGTERM
+
+# ── CLI argument parsing ──────────────────────────────────────────────
+DRY_RUN=false
+SPECIFIC_TASK_FILE=""
+
+parse_args() {
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --dry-run)
+                DRY_RUN=true
+                shift
+                ;;
+            --list)
+                list_pending_tasks
+                exit 0
+                ;;
+            --status)
+                show_status
+                exit 0
+                ;;
+            --help|-h)
+                echo "Usage: $0 [options] [task-file]"
+                echo ""
+                echo "Options:"
+                echo "  --dry-run    Run Phase 1 only, show review output"
+                echo "  --list       List pending tasks"
+                echo "  --status     Show status of last run"
+                echo "  --help       Show this help"
+                echo ""
+                echo "If task-file is provided, runs that file directly (skips queue)."
+                echo "If no arguments, picks the next pending task from the queue."
+                exit 0
+                ;;
+            -*)
+                echo "Unknown option: $1" >&2
+                echo "Run '$0 --help' for usage." >&2
+                exit 1
+                ;;
+            *)
+                SPECIFIC_TASK_FILE="$1"
+                shift
+                ;;
+        esac
+    done
+}
+
+# ── Main ──────────────────────────────────────────────────────────────
+main() {
+    touch "$LOG_FILE"
+    log_info "=== Claude Runner started ==="
+
+    validate_environment
+
+    acquire_lock
+
+    if [ -n "$SPECIFIC_TASK_FILE" ]; then
+        if [ ! -f "$SPECIFIC_TASK_FILE" ]; then
+            log_error "Task file not found: $SPECIFIC_TASK_FILE"
+            release_lock
+            exit 1
+        fi
+        CURRENT_TASK_FILE="$SPECIFIC_TASK_FILE"
+        CURRENT_TASK_NAME="$(basename "$SPECIFIC_TASK_FILE" .txt)"
+        TASK_IS_QUEUED=false
+        log_info "Running specific task: $CURRENT_TASK_NAME"
+    else
+        if ! pick_task; then
+            log_info "No pending tasks."
+            notify "no-tasks" "No pending tasks in queue" ""
+            release_lock
+            exit 0
+        fi
+        move_task "in-progress"
+    fi
+
+    local final_status="success"
+    local final_summary=""
+
+    if ! phase_review "$CURRENT_TASK_FILE"; then
+        final_status="failure"
+        final_summary="Phase 1 failed: could not review/enrich task '$CURRENT_TASK_NAME'"
+        log_error "$final_summary"
+        append_to_task "--- RUNNER OUTPUT ($RUN_DATE) ---
+Status: failure
+Error: Phase 1 (review) failed
+Log: $(basename "$LOG_FILE")"
+        move_task "failed"
+        notify "$final_status" "$final_summary" ""
+        release_lock
+        exit 1
+    fi
+
+    local project_name
+    project_name="$(echo "$REVIEW_JSON" | jq -r '.project_name')"
+    local summary
+    summary="$(echo "$REVIEW_JSON" | jq -r '.summary')"
+
+    if [ "$DRY_RUN" = true ]; then
+        log_info "Dry run — Phase 1 output:"
+        echo ""
+        echo "=== DRY RUN — Phase 1 Review Output ==="
+        echo "$REVIEW_JSON" | jq .
+        echo "========================================"
+        echo ""
+        echo "Guardrails that would be applied:"
+        local task_guardrails_json
+        task_guardrails_json="$(echo "$REVIEW_JSON" | jq -c '.task_guardrails')"
+        merge_guardrails "$project_name" "$task_guardrails_json"
+        echo ""
+
+        if [ "$TASK_IS_QUEUED" = true ]; then
+            restore_task
+        fi
+
+        release_lock
+        exit 0
+    fi
+
+    phase_execute
+
+    phase_report
+
+    if [ "$EXECUTE_EXIT_CODE" -ne 0 ]; then
+        final_status="failure"
+        final_summary="Task '$CURRENT_TASK_NAME' failed on $project_name: $summary"
+        move_task "failed"
+    else
+        final_status="success"
+        final_summary="Task '$CURRENT_TASK_NAME' completed on $project_name: $summary"
+        move_task "completed"
+    fi
+
+    local run_end_epoch
+    run_end_epoch="$(date '+%s')"
+    local duration_secs=$((run_end_epoch - RUN_START_EPOCH))
+    local duration
+    duration="$(format_duration $duration_secs)"
+
+    log_info "=== Claude Runner finished: $final_status ($duration) ==="
+
+    notify "$final_status" "$final_summary" "$REPORT_PATH"
+
+    release_lock
+
+    if [ "$final_status" = "failure" ]; then
+        exit 1
+    fi
+    exit 0
+}
+
+# ── Entry point ───────────────────────────────────────────────────────
+parse_args "$@"
+main
