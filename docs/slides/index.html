@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Runner</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .slide {
+      width: 100%;
+      max-width: 1100px;
+      aspect-ratio: 16 / 9;
+      background: #1e293b;
+      border-radius: 16px;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .slide-header {
+      background: #1e3a5f;
+      padding: 2rem 3rem 1.5rem;
+      border-bottom: 3px solid #38bdf8;
+    }
+    .slide-header h1 { font-size: 2.2rem; font-weight: 700; color: #f8fafc; letter-spacing: -0.03em; }
+    .slide-header .tagline { font-size: 1rem; color: #7dd3fc; margin-top: 0.3rem; font-weight: 500; }
+    .badge-row { display: flex; gap: 0.75rem; margin-top: 0.75rem; }
+    .badge {
+      background: #38bdf8; color: #0f172a; font-size: 0.7rem; font-weight: 700;
+      padding: 0.2rem 0.7rem; border-radius: 999px; letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .badge.alt { background: #059669; color: white; }
+    .badge.alt2 { background: #d97706; color: white; }
+    .slide-body { display: grid; grid-template-columns: 1fr 1fr 1fr; flex: 1; }
+    .col { padding: 1.75rem 2rem; display: flex; flex-direction: column; gap: 1rem; }
+    .col + .col { border-left: 1px solid #334155; }
+    .col-title {
+      font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: #64748b; padding-bottom: 0.5rem; border-bottom: 1px solid #334155;
+    }
+    .pipeline-step { display: flex; align-items: flex-start; gap: 0.6rem; }
+    .step-num {
+      background: #38bdf8; color: #0f172a; width: 1.4rem; height: 1.4rem;
+      border-radius: 50%; font-size: 0.65rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 0.1rem;
+    }
+    .step-label { font-size: 0.8rem; font-weight: 600; color: #f1f5f9; }
+    .step-desc { font-size: 0.72rem; color: #94a3b8; line-height: 1.4; margin-top: 0.1rem; }
+    .feature-list { font-size: 0.72rem; color: #94a3b8; line-height: 1.8; list-style: none; padding: 0; }
+    .feature-list li::before { content: "\25B8"; color: #38bdf8; margin-right: 0.4rem; }
+    .tech-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .tech-tag {
+      display: inline-block; background: #1e293b; border: 1px solid #334155;
+      color: #cbd5e1; font-size: 0.68rem; font-weight: 600;
+      padding: 0.2rem 0.55rem; border-radius: 4px; font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+    .output-tree {
+      font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+      font-size: 0.7rem; color: #94a3b8; line-height: 1.7;
+      background: #0f172a; border-radius: 8px; padding: 0.9rem 1.1rem;
+      border: 1px solid #334155;
+    }
+    .output-tree .folder { color: #60a5fa; }
+    .output-tree .file   { color: #86efac; }
+    .output-tree .dim    { color: #475569; }
+    .slide-footer {
+      background: #0f172a; padding: 0.9rem 3rem;
+      display: flex; align-items: center; justify-content: space-between;
+      border-top: 1px solid #1e293b;
+    }
+    .footer-cmd {
+      font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.78rem;
+      color: #38bdf8; background: #1e293b; padding: 0.45rem 1rem;
+      border-radius: 6px; border: 1px solid #334155;
+    }
+    .footer-note { font-size: 0.65rem; color: #475569; font-style: italic; }
+  </style>
+</head>
+<body>
+<div class="slide">
+  <div class="slide-header">
+    <h1>Claude Runner</h1>
+    <div class="tagline">Drop a text file, get autonomous code changes &mdash; three-phase Claude Code pipeline with guardrails</div>
+    <div class="badge-row">
+      <span class="badge">Autonomous</span>
+      <span class="badge alt">3-Layer Guardrails</span>
+      <span class="badge alt2">Cron-Ready</span>
+      <span class="badge">Zero Dependencies</span>
+    </div>
+  </div>
+  <div class="slide-body">
+    <!-- Column 1: Pipeline -->
+    <div class="col">
+      <div class="col-title">Pipeline</div>
+      <div class="pipeline-step">
+        <span class="step-num">1</span>
+        <div>
+          <div class="step-label">pick_task()</div>
+          <div class="step-desc">Selects the oldest .txt from tasks/pending/ (FIFO queue)</div>
+        </div>
+      </div>
+      <div class="pipeline-step">
+        <span class="step-num">2</span>
+        <div>
+          <div class="step-label">phase_review()</div>
+          <div class="step-desc">Claude identifies project, classifies task type, enriches with actionable detail</div>
+        </div>
+      </div>
+      <div class="pipeline-step">
+        <span class="step-num">3</span>
+        <div>
+          <div class="step-label">merge_guardrails()</div>
+          <div class="step-desc">Combines global + per-project + per-task guardrails into a single constraint set</div>
+        </div>
+      </div>
+      <div class="pipeline-step">
+        <span class="step-num">4</span>
+        <div>
+          <div class="step-label">phase_execute()</div>
+          <div class="step-desc">Runs Claude Code in the project directory &mdash; branch, code, test, commit, push</div>
+        </div>
+      </div>
+      <div class="pipeline-step">
+        <span class="step-num">5</span>
+        <div>
+          <div class="step-label">phase_report()</div>
+          <div class="step-desc">Generates a structured markdown report from the execution log</div>
+        </div>
+      </div>
+      <div class="pipeline-step">
+        <span class="step-num">6</span>
+        <div>
+          <div class="step-label">notify()</div>
+          <div class="step-desc">Calls pluggable hook &mdash; WhatsApp, Telegram, Slack, or just a log</div>
+        </div>
+      </div>
+    </div>
+    <!-- Column 2: Features + Stack -->
+    <div class="col">
+      <div class="col-title">Key Features</div>
+      <ul class="feature-list">
+        <li>Free-text tasks &mdash; no structured format required</li>
+        <li>Auto-detects project from aliases in registry</li>
+        <li>Code tasks: branch, implement, test, commit, push</li>
+        <li>Non-code tasks: code review, security audit, research reports</li>
+        <li>Three-layer guardrails prevent unsafe operations</li>
+        <li>Atomic lock prevents concurrent runs</li>
+        <li>SIGINT/SIGTERM traps restore tasks to queue</li>
+        <li>Dry-run mode previews Phase 1 without executing</li>
+      </ul>
+      <div class="col-title" style="margin-top: 0.5rem">Stack</div>
+      <div class="tech-grid">
+        <span class="tech-tag">Bash 3.2+</span>
+        <span class="tech-tag">Claude Code CLI</span>
+        <span class="tech-tag">jq</span>
+        <span class="tech-tag">MiniMax API</span>
+        <span class="tech-tag">cron</span>
+        <span class="tech-tag">git</span>
+      </div>
+    </div>
+    <!-- Column 3: Output -->
+    <div class="col">
+      <div class="col-title">Output</div>
+      <div class="output-tree">
+<span class="folder">tasks/completed/</span>
+  <span class="file">fix-login-bug.txt</span> <span class="dim"># + appended summary</span>
+<span class="folder">reports/</span>
+  <span class="file">2026-04-17-payments-app-bugfix.md</span>
+<span class="folder">logs/</span>
+  <span class="file">2026-04-17-143022.log</span>
+      </div>
+      <div class="col-title" style="margin-top: 0.5rem">Report Includes</div>
+      <div class="step-desc" style="line-height: 1.6">
+        <span style="color:#38bdf8">&blacktriangleright;</span> Summary of changes made<br>
+        <span style="color:#38bdf8">&blacktriangleright;</span> Files modified / created / deleted<br>
+        <span style="color:#38bdf8">&blacktriangleright;</span> Test results &amp; risks<br>
+        <span style="color:#38bdf8">&blacktriangleright;</span> Follow-up recommendations<br>
+        <span style="color:#38bdf8">&blacktriangleright;</span> Severity ratings (for reviews)
+      </div>
+      <div class="col-title" style="margin-top: 0.5rem">CLI Options</div>
+      <div class="step-desc" style="font-family: 'SF Mono', monospace; font-size: 0.65rem">
+        --dry-run &nbsp;<span class="dim"># Phase 1 only</span><br>
+        --list &nbsp;&nbsp;&nbsp;<span class="dim"># show queue</span><br>
+        --status &nbsp;<span class="dim"># last run</span><br>
+        task.txt &nbsp;<span class="dim"># run specific file</span>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">
+    <code class="footer-cmd">echo "Fix the auth bug" &gt; tasks/pending/fix-auth.txt &amp;&amp; ./claude-runner.sh</code>
+    <span class="footer-note">Drop a task, get a commit &mdash; 790 lines of Bash orchestrating Claude Code</span>
+  </div>
+</div>
+</body>
+</html>
