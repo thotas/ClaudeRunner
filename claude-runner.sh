@@ -21,12 +21,18 @@ fi
 # shellcheck source=config/runner.conf
 source "$CONFIG_FILE"
 
-# Resolve relative paths to absolute
-TASKS_DIR="$RUNNER_DIR/$TASKS_DIR"
-REPORTS_DIR="$RUNNER_DIR/$REPORTS_DIR"
-LOGS_DIR="$RUNNER_DIR/$LOGS_DIR"
-PROMPTS_DIR="$RUNNER_DIR/$PROMPTS_DIR"
-NOTIFY_HOOK="$RUNNER_DIR/$NOTIFY_HOOK"
+# Resolve relative paths to absolute (guard against already-absolute paths)
+_resolve_path() {
+    case "$1" in
+        /*) echo "$1" ;;
+        *)  echo "$RUNNER_DIR/$1" ;;
+    esac
+}
+TASKS_DIR="$(_resolve_path "$TASKS_DIR")"
+REPORTS_DIR="$(_resolve_path "$REPORTS_DIR")"
+LOGS_DIR="$(_resolve_path "$LOGS_DIR")"
+PROMPTS_DIR="$(_resolve_path "$PROMPTS_DIR")"
+NOTIFY_HOOK="$(_resolve_path "$NOTIFY_HOOK")"
 
 # ── Timestamp for this run ────────────────────────────────────────────
 RUN_TIMESTAMP="$(date '+%Y-%m-%d-%H%M%S')"
@@ -113,37 +119,43 @@ format_duration() {
 
 # ── Lock management ───────────────────────────────────────────────────
 acquire_lock() {
+    # Check for existing lock and handle stale/dead cases
     if [ -f "$LOCK_FILE" ]; then
         local lock_pid
         lock_pid="$(cat "$LOCK_FILE" 2>/dev/null || echo "")"
-        local lock_age=0
 
-        if [ -f "$LOCK_FILE" ]; then
-            local lock_mtime
-            lock_mtime="$(stat -f '%m' "$LOCK_FILE" 2>/dev/null || echo "0")"
-            local now
-            now="$(date '+%s')"
-            lock_age=$((now - lock_mtime))
-        fi
+        local lock_mtime
+        lock_mtime="$(stat -f '%m' "$LOCK_FILE" 2>/dev/null || echo "0")"
+        local now
+        now="$(date '+%s')"
+        local lock_age=$((now - lock_mtime))
 
         if [ "$lock_age" -ge "$LOCK_TIMEOUT" ]; then
-            log_warn "Stale lock found (age: $(format_duration $lock_age), pid: $lock_pid). Removing."
+            log_warn "Stale lock found (age: $(format_duration "$lock_age"), pid: $lock_pid). Removing."
             rm -f "$LOCK_FILE"
         elif [ -n "$lock_pid" ] && ! kill -0 "$lock_pid" 2>/dev/null; then
             log_warn "Lock held by dead process (pid: $lock_pid). Removing."
             rm -f "$LOCK_FILE"
         else
-            log_info "Another run is active (pid: $lock_pid, age: $(format_duration $lock_age)). Exiting."
+            log_info "Another run is active (pid: $lock_pid, age: $(format_duration "$lock_age")). Exiting."
             exit 0
         fi
     fi
 
+    # Atomic lock acquisition using mkdir (POSIX atomic on all filesystems)
+    local lock_dir="${LOCK_FILE}.d"
+    if ! mkdir "$lock_dir" 2>/dev/null; then
+        log_info "Another run just started (lock race). Exiting."
+        exit 0
+    fi
     echo $$ > "$LOCK_FILE"
+    rmdir "$lock_dir" 2>/dev/null || true
     log_debug "Lock acquired (pid: $$)"
 }
 
 release_lock() {
     rm -f "$LOCK_FILE"
+    rmdir "${LOCK_FILE}.d" 2>/dev/null || true
     log_debug "Lock released"
 }
 
@@ -154,13 +166,10 @@ TASK_IS_QUEUED=false
 
 pick_task() {
     local pending_dir="$TASKS_DIR/pending"
+    # Pick the oldest .txt file by modification time (FIFO order)
     local oldest
-    oldest="$(find "$pending_dir" -maxdepth 1 -name '*.txt' -type f -print 2>/dev/null | head -1)"
-
-    if [ -z "$oldest" ]; then
-        oldest="$(find "$pending_dir" -maxdepth 1 -name '*.txt' -type f -print0 2>/dev/null \
-            | xargs -0 ls -t 2>/dev/null | tail -1)"
-    fi
+    oldest="$(find "$pending_dir" -maxdepth 1 -name '*.txt' -type f -print0 2>/dev/null \
+        | xargs -0 ls -t 2>/dev/null | tail -1)"
 
     if [ -z "$oldest" ]; then
         return 1
@@ -519,10 +528,13 @@ phase_execute() {
         log_info "Branch: $branch_name"
     fi
 
-    EXECUTE_OUTPUT="$(run_claude "$execute_prompt" "$project_path")" || {
-        EXECUTE_EXIT_CODE=$?
+    EXECUTE_EXIT_CODE=0
+    EXECUTE_OUTPUT="$(run_claude "$execute_prompt" "$project_path")" \
+        || EXECUTE_EXIT_CODE=$?
+
+    if [ "$EXECUTE_EXIT_CODE" -ne 0 ]; then
         log_error "Phase 2: Claude Code failed with exit code $EXECUTE_EXIT_CODE"
-    }
+    fi
 
     local output_lines
     output_lines="$(echo "$EXECUTE_OUTPUT" | wc -l | tr -d ' ')"
@@ -666,6 +678,11 @@ parse_args() {
 
 # ── Main ──────────────────────────────────────────────────────────────
 main() {
+    # Ensure required directories exist
+    mkdir -p "$LOGS_DIR" "$REPORTS_DIR" \
+        "$TASKS_DIR/pending" "$TASKS_DIR/in-progress" \
+        "$TASKS_DIR/completed" "$TASKS_DIR/failed"
+
     touch "$LOG_FILE"
     log_info "=== Claude Runner started ==="
 
