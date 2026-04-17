@@ -357,7 +357,7 @@ Instructs Claude to generate a structured markdown report from the execution log
 
 ## Dependencies
 
-- `bash` (4.0+)
+- `bash` (3.2+ — compatible with macOS default)
 - `claude` CLI (2.x) at `/opt/homebrew/bin/claude`
 - `jq` for JSON parsing
 - `date`, `mv`, `cat`, `mktemp` — standard Unix tools
