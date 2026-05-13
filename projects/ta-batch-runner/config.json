@@ -1,0 +1,19 @@
+{
+  "tickers": ["AAPL", "MSFT", "GOOGL"],
+  "ta_dir": "/Users/babu/Development/tradingagents",
+  "venv_activate": "/Users/babu/Development/tradingagents/.venv/bin/activate",
+  "run_analysis_script": "/Users/babu/Development/tradingagents/run_analysis.py",
+  "gcp_vm": {
+    "host": "thotas@34.82.106.90",
+    "remote_path": "/var/www/static",
+    "local_tmp_dir": "/tmp/ta-batch-gcp"
+  },
+  "telegram": {
+    "chat_id": "7192357563"
+  },
+  "state_file": "/Users/babu/.hermes/ta-batch-state.json",
+  "log_dir": "/Users/babu/Development/ClaudeRunner/logs/ta-batch",
+  "analysis_timeout_seconds": 900,
+  "poll_interval_seconds": 30,
+  "report_script": "/Users/babu/.hermes/skills/productivity/tradingagents-report/scripts/gen_ticker_report.py"
+}
