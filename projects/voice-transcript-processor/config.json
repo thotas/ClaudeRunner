@@ -1,0 +1,21 @@
+{
+  "speaker_patterns": [
+    "^SPEAKER_(\\d+):",
+    "^\\[([^\\]]+)\\]",
+    "^<([^>]+)>",
+    "^([A-Z][a-z]+):",
+    "^([A-Z][a-z]+ [A-Z][a-z]+):"
+  ],
+  "summary_style": {
+    "format": "bullets",
+    "include_timestamps": false,
+    "max_sentences_per_speaker": 5,
+    "include_action_items": true
+  },
+  "output_options": {
+    "processed_suffix": "_processed",
+    "include_full_transcript": true,
+    "include_speaker_summary": true,
+    "include_action_items": true
+  }
+}
