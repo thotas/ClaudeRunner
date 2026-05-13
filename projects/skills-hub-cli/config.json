@@ -1,0 +1,172 @@
+{
+  "categories": {
+    "apple": {
+      "color": "cyan",
+      "description": "Apple/macOS-specific skills"
+    },
+    "autonomous-ai-agents": {
+      "color": "green",
+      "description": "Skills for spawning autonomous AI coding agents"
+    },
+    "brainstorming": {
+      "color": "magenta",
+      "description": "Brainstorming and ideation"
+    },
+    "browser": {
+      "color": "blue",
+      "description": "Web browsing and scraping"
+    },
+    "creative": {
+      "color": "magenta",
+      "description": "Creative content generation"
+    },
+    "data-science": {
+      "color": "green",
+      "description": "Data science and ML workflows"
+    },
+    "devops": {
+      "color": "yellow",
+      "description": "DevOps and automation"
+    },
+    "diagramming": {
+      "color": "magenta",
+      "description": "Diagrams and visual design"
+    },
+    "dispatching-parallel-agents": {
+      "color": "green",
+      "description": "Multi-agent orchestration"
+    },
+    "dogfood": {
+      "color": "red",
+      "description": "Exploratory QA of web apps"
+    },
+    "email": {
+      "color": "cyan",
+      "description": "Email management"
+    },
+    "gaming": {
+      "color": "red",
+      "description": "Gaming and game servers"
+    },
+    "github": {
+      "color": "white",
+      "description": "GitHub workflow automation"
+    },
+    "homeassistant": {
+      "color": "yellow",
+      "description": "Smart home control"
+    },
+    "huashu-design": {
+      "color": "magenta",
+      "description": "High-fidelity HTML prototypes"
+    },
+    "inference-sh": {
+      "color": "green",
+      "description": "Model inference and serving"
+    },
+    "mcp": {
+      "color": "cyan",
+      "description": "Model Context Protocol"
+    },
+    "media": {
+      "color": "magenta",
+      "description": "Audio, video, and music generation"
+    },
+    "memory-archivist": {
+      "color": "cyan",
+      "description": "Memory system maintenance"
+    },
+    "memory-starter-kit": {
+      "color": "cyan",
+      "description": "Memory system initialization"
+    },
+    "meta": {
+      "color": "white",
+      "description": "Meta skills and self-optimization"
+    },
+    "mlops": {
+      "color": "green",
+      "description": "Machine learning operations"
+    },
+    "note-taking": {
+      "color": "cyan",
+      "description": "Note-taking and knowledge management"
+    },
+    "productivity": {
+      "color": "green",
+      "description": "Productivity tools"
+    },
+    "red-teaming": {
+      "color": "red",
+      "description": "Security testing"
+    },
+    "research": {
+      "color": "blue",
+      "description": "Academic research and discovery"
+    },
+    "ring": {
+      "color": "yellow",
+      "description": "Ring camera and doorbell control"
+    },
+    "security": {
+      "color": "red",
+      "description": "Security implementations"
+    },
+    "smart-home": {
+      "color": "yellow",
+      "description": "Smart home automation"
+    },
+    "social-media": {
+      "color": "cyan",
+      "description": "Social media management"
+    },
+    "software-development": {
+      "color": "green",
+      "description": "Software development practices"
+    },
+    "subagent-driven-development": {
+      "color": "green",
+      "description": "Subagent orchestration"
+    },
+    "systematic-debugging": {
+      "color": "red",
+      "description": "Debugging methodologies"
+    },
+    "test-driven-development": {
+      "color": "green",
+      "description": "TDD practices"
+    },
+    "uncategorized": {
+      "color": "black",
+      "description": "Skills without a category"
+    },
+    "using-git-worktrees": {
+      "color": "yellow",
+      "description": "Git worktree management"
+    },
+    "using-superpowers": {
+      "color": "cyan",
+      "description": "Session initialization"
+    },
+    "verification-before-completion": {
+      "color": "green",
+      "description": "Pre-completion verification"
+    },
+    "writing-plans": {
+      "color": "cyan",
+      "description": "Planning and implementation plans"
+    },
+    "writing-skills": {
+      "color": "cyan",
+      "description": "Skill authoring"
+    },
+    "yuanbao": {
+      "color": "cyan",
+      "description": "Yuanbao group management"
+    }
+  },
+  "output": {
+    "color": "auto",
+    "format": "list"
+  }
+}
