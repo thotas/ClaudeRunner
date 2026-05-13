@@ -548,6 +548,16 @@ phase_execute() {
         log_info "Branch: $branch_name"
     fi
 
+    # ── Pre-flight: strip embedded .git directories ──────────────────
+    if [ -d "$project_path" ]; then
+        local git_dirs
+        git_dirs="$(find "$project_path" -name ".git" -type d 2>/dev/null || true)"
+        if [ -n "$git_dirs" ]; then
+            log_warn "Found embedded .git directories — stripping before commit"
+            find "$project_path" -name ".git" -type d -exec rm -rf {} + 2>/dev/null || true
+        fi
+    fi
+
     EXECUTE_EXIT_CODE=0
     EXECUTE_OUTPUT="$(run_claude "$execute_prompt" "$project_path")" \
         || EXECUTE_EXIT_CODE=$?
