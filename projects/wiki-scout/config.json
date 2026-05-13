@@ -1,0 +1,9 @@
+{
+  "wiki_path": "~/wiki/",
+  "check_frontmatter": true,
+  "check_broken_links": true,
+  "check_orphans": true,
+  "telegram_alert": true,
+  "telegram_user_id": "7192357563",
+  "issues_threshold": 1
+}
