@@ -1,0 +1,64 @@
+{
+  "title": "Q3 2026 Engineering Performance Review",
+  "sections": [
+    {
+      "heading": "Executive Summary",
+      "type": "text",
+      "content": "The engineering team delivered 47 features across 12 sprint cycles, achieving a 23% improvement in deployment frequency compared to Q2. System reliability remained steady at 99.94% uptime while technical debt was reduced by an estimated 18 developer days.\n\nCustomer-reported incidents decreased by 31% quarter-over-quarter, reflecting investments in automated testing and observability tooling initiated in early Q3."
+    },
+    {
+      "heading": "Delivery Metrics",
+      "type": "table",
+      "content": {
+        "headers": ["Metric", "Q2 2026", "Q3 2026", "Change"],
+        "rows": [
+          ["Features Delivered", "38", "47", "+23.7%"],
+          ["Sprint Velocity (pts)", "312", "334", "+7.1%"],
+          ["Deployment Frequency", "Weekly", "Bi-weekly", "+100%"],
+          ["Lead Time (days)", "8.2", "6.4", "-22.0%"],
+          ["Incident Count", "29", "20", "-31.0%"],
+          ["Tech Debt (dev-days)", "64", "46", "-28.1%"]
+        ]
+      }
+    },
+    {
+      "heading": "Team Highlights",
+      "type": "list",
+      "content": [
+        "Platform team reduced average build time from 14 minutes to 6 minutes through parallelized CI pipeline",
+        "Mobile team shipped cross-platform authentication with biometric support two weeks ahead of schedule",
+        "Infrastructure team migrated 3 critical services to Kubernetes, eliminating two single Points of Failure",
+        "QA team achieved 94% automated test coverage, up from 81% at the start of the quarter",
+        "Security team completed SOC 2 Type II readiness audit with zero critical findings"
+      ]
+    },
+    {
+      "heading": "Technical Debt Assessment",
+      "type": "text",
+      "content": "Remaining technical debt is concentrated in three areas: legacy authentication modules (estimated 12 dev-days), the reporting pipeline (estimated 8 dev-days), and the notification service (estimated 6 dev-days).\n\nThe Q4 roadmap includes dedicated sprint capacity for debt reduction, targeting a 40% overall reduction by year-end."
+    },
+    {
+      "heading": "Resource Allocation",
+      "type": "table",
+      "content": {
+        "headers": ["Team", "Headcount", "Sprints", "Feature %", "Maintenance %"],
+        "rows": [
+          ["Platform", "8", "12", "68%", "32%"],
+          ["Mobile", "5", "12", "74%", "26%"],
+          ["Infrastructure", "4", "12", "55%", "45%"],
+          ["QA", "3", "12", "45%", "55%"],
+          ["Security", "2", "12", "30%", "70%"]
+        ]
+      }
+    },
+    {
+      "heading": "Looking Ahead",
+      "type": "text",
+      "content": "Q4 priorities include the customer-facing dashboard redesign, real-time analytics pipeline, and the first phase of the platform modernization initiative. The team will also begin exploratory work on the mobile offline-mode capability requested by enterprise customers.\n\nKey risks include the pending hire for the senior backend role and dependency on a third-party API whose roadmap remains uncertain."
+    }
+  ],
+  "meta": {
+    "author": "Sarah Chen",
+    "date": "October 15, 2026"
+  }
+}

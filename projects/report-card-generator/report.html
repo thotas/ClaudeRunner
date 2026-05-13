@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q3 2026 Engineering Performance Review</title>
+    <style>
+
+    :root {
+        --bg-primary: #0D1117;
+        --bg-secondary: #161B22;
+        --bg-card: #1C2128;
+        --text-primary: #E6EDF3;
+        --text-secondary: #8B949E;
+        --accent: #C9A96E;
+        --accent-subtle: rgba(201, 169, 110, 0.15);
+        --border: #30363D;
+        --font-display: 'Georgia', 'Times New Roman', serif;
+        --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    }
+
+    *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.6;
+        min-height: 100vh;
+    }
+
+    .report-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 60px 24px 100px;
+    }
+
+    .report-header {
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 40px;
+        margin-bottom: 56px;
+    }
+
+    .report-title {
+        font-family: var(--font-display);
+        font-size: 2.4rem;
+        font-weight: normal;
+        color: var(--text-primary);
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+    }
+
+    .report-meta {
+        margin-top: 16px;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .report-meta span {
+        margin-right: 24px;
+    }
+
+    .report-section {
+        margin-bottom: 48px;
+    }
+
+    .section-heading {
+        font-family: var(--font-display);
+        font-size: 1.35rem;
+        font-weight: normal;
+        color: var(--accent);
+        border-left: 3px solid var(--accent);
+        padding-left: 16px;
+        margin-bottom: 20px;
+        letter-spacing: 0.01em;
+    }
+
+    .section-content {
+        color: var(--text-primary);
+        font-size: 1rem;
+        line-height: 1.75;
+    }
+
+    .section-content p {
+        margin-bottom: 16px;
+    }
+
+    .section-content p:last-child {
+        margin-bottom: 0;
+    }
+
+    .section-list {
+        list-style: none;
+        padding: 0;
+    }
+
+    .section-list li {
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border);
+        color: var(--text-primary);
+    }
+
+    .section-list li:last-child {
+        border-bottom: none;
+    }
+
+    .section-list li::before {
+        content: '—';
+        color: var(--accent);
+        margin-right: 12px;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 8px;
+        font-size: 0.9375rem;
+    }
+
+    .data-table th {
+        text-align: left;
+        padding: 12px 16px;
+        background: var(--bg-secondary);
+        color: var(--accent);
+        font-weight: 600;
+        border-bottom: 2px solid var(--border);
+        font-family: var(--font-display);
+        letter-spacing: 0.02em;
+    }
+
+    .data-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+        color: var(--text-primary);
+    }
+
+    .data-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .data-table tr:hover td {
+        background: var(--accent-subtle);
+    }
+
+    </style>
+</head>
+<body>
+    <div class="report-container">
+        <header class="report-header">
+            <h1 class="report-title">Q3 2026 Engineering Performance Review</h1>
+            <div class="report-meta"><span>By Sarah Chen</span><span>October 15, 2026</span></div>
+        </header>
+        <main>
+<section class='report-section'>
+<h2 class='section-heading'>Executive Summary</h2>
+<div class='section-content'><p>The engineering team delivered 47 features across 12 sprint cycles, achieving a 23% improvement in deployment frequency compared to Q2. System reliability remained steady at 99.94% uptime while technical debt was reduced by an estimated 18 developer days.</p>
+<p>Customer-reported incidents decreased by 31% quarter-over-quarter, reflecting investments in automated testing and observability tooling initiated in early Q3.</p></div>
+</section>
+<section class='report-section'>
+<h2 class='section-heading'>Delivery Metrics</h2>
+<div class='section-content'><table class='data-table'>
+<thead>
+<tr><th>Metric</th><th>Q2 2026</th><th>Q3 2026</th><th>Change</th></tr>
+</thead>
+<tbody>
+<tr><td>Features Delivered</td><td>38</td><td>47</td><td>+23.7%</td></tr><tr><td>Sprint Velocity (pts)</td><td>312</td><td>334</td><td>+7.1%</td></tr><tr><td>Deployment Frequency</td><td>Weekly</td><td>Bi-weekly</td><td>+100%</td></tr><tr><td>Lead Time (days)</td><td>8.2</td><td>6.4</td><td>-22.0%</td></tr><tr><td>Incident Count</td><td>29</td><td>20</td><td>-31.0%</td></tr><tr><td>Tech Debt (dev-days)</td><td>64</td><td>46</td><td>-28.1%</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class='report-section'>
+<h2 class='section-heading'>Team Highlights</h2>
+<div class='section-content'><ul class='section-list'>
+<li>Platform team reduced average build time from 14 minutes to 6 minutes through parallelized CI pipeline</li>
+<li>Mobile team shipped cross-platform authentication with biometric support two weeks ahead of schedule</li>
+<li>Infrastructure team migrated 3 critical services to Kubernetes, eliminating two single Points of Failure</li>
+<li>QA team achieved 94% automated test coverage, up from 81% at the start of the quarter</li>
+<li>Security team completed SOC 2 Type II readiness audit with zero critical findings</li>
+</ul></div>
+</section>
+<section class='report-section'>
+<h2 class='section-heading'>Technical Debt Assessment</h2>
+<div class='section-content'><p>Remaining technical debt is concentrated in three areas: legacy authentication modules (estimated 12 dev-days), the reporting pipeline (estimated 8 dev-days), and the notification service (estimated 6 dev-days).</p>
+<p>The Q4 roadmap includes dedicated sprint capacity for debt reduction, targeting a 40% overall reduction by year-end.</p></div>
+</section>
+<section class='report-section'>
+<h2 class='section-heading'>Resource Allocation</h2>
+<div class='section-content'><table class='data-table'>
+<thead>
+<tr><th>Team</th><th>Headcount</th><th>Sprints</th><th>Feature %</th><th>Maintenance %</th></tr>
+</thead>
+<tbody>
+<tr><td>Platform</td><td>8</td><td>12</td><td>68%</td><td>32%</td></tr><tr><td>Mobile</td><td>5</td><td>12</td><td>74%</td><td>26%</td></tr><tr><td>Infrastructure</td><td>4</td><td>12</td><td>55%</td><td>45%</td></tr><tr><td>QA</td><td>3</td><td>12</td><td>45%</td><td>55%</td></tr><tr><td>Security</td><td>2</td><td>12</td><td>30%</td><td>70%</td></tr>
+</tbody>
+</table></div>
+</section>
+<section class='report-section'>
+<h2 class='section-heading'>Looking Ahead</h2>
+<div class='section-content'><p>Q4 priorities include the customer-facing dashboard redesign, real-time analytics pipeline, and the first phase of the platform modernization initiative. The team will also begin exploratory work on the mobile offline-mode capability requested by enterprise customers.</p>
+<p>Key risks include the pending hire for the senior backend role and dependency on a third-party API whose roadmap remains uncertain.</p></div>
+</section>
+        </main>
+    </div>
+</body>
+</html>
