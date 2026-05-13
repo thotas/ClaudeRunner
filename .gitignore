@@ -8,4 +8,4 @@ __pycache__/
 .venv/
 venv/
 *.pyc
-*.db
+*.dbskills_hub.egg-info/
