@@ -1,0 +1,32 @@
+{
+  "required_vars": [
+    "DATABASE_URL",
+    "API_KEY",
+    "SECRET_KEY",
+    "JWT_SECRET",
+    "REDIS_URL",
+    "SMTP_HOST",
+    "SMTP_USERNAME",
+    "SMTP_PASSWORD"
+  ],
+  "env_file_patterns": [
+    ".env*",
+    "*.env*",
+    "**/.env*",
+    "**/.env"
+  ],
+  "known_secret_patterns": [
+    "password",
+    "secret",
+    "token",
+    "api[_-]?key",
+    "private[_-]?key",
+    "access[_-]?token",
+    "auth[_-]?token",
+    "bearer",
+    "credential",
+    "private[_-]?key",
+    "aws[_-]?access[_-]?key",
+    "github[_-]?token"
+  ]
+}
