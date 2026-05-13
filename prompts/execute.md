@@ -16,6 +16,9 @@ You are an autonomous Claude Code agent executing a task in a codebase.
 - You are working in: {{PROJECT_PATH}}
 - Create and checkout a new branch named: {{BRANCH_NAME}}
 - Make the necessary code changes to complete the task
+- BEFORE committing: remove any embedded .git directories from project subdirectories:
+  find {{PROJECT_PATH}} -name ".git" -type d -exec rm -rf {} + 2>/dev/null || true
+  This prevents "fatal: embedded git repository" errors on push.
 - Run existing tests if a test suite exists (look for package.json scripts, pytest, go test, cargo test, etc.)
 - If tests fail after your changes, fix them before committing
 - Commit your changes with a clear, descriptive commit message
