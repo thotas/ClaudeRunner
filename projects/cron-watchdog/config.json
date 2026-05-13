@@ -1,0 +1,5 @@
+{
+  "output_dir": "~/.hermes/cron/output/",
+  "alert_cooldown_minutes": 60,
+  "watch_patterns": ["*.json"]
+}
