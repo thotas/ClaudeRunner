@@ -1,0 +1,13 @@
+{
+  "bookmark_file": "bookmarks.md",
+  "tag_keywords": {
+    "python": "python",
+    "javascript": "javascript",
+    "web": "web",
+    "cli": "cli",
+    "devops": "devops",
+    "data": "data",
+    "ml": "machine-learning",
+    "ai": "ai"
+  }
+}
