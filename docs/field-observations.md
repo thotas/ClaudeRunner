@@ -59,11 +59,32 @@ Failed tests require manual re-run. Claude Code might produce a broken build on 
 | P7: env-audit-cli | ✓ Merged PR #5. 23 tests passing. .env auditor with missing/stale/duplicate detection. |
 | P8: voice-transcript-processor | ✓ Merged PR #6. 19 tests passing. VTT/SRT/text parsing with speaker splitting and action item extraction. |
 
-## Phase 2 Complete ✓
+## Phase 3 Improvements ✓
+
+Implemented the top 3 improvements based on field observations:
+
+### 1. Retry-until-green
+- `run_claude()` now retries up to `RETRY_MAX` (default 3) times with exponential backoff
+- Configurable via env vars or `config/runner.conf`
+- Logs each attempt for observability
+
+### 2. Project Pre-Flight (.git strip)
+- `phase_execute()` now strips `.git/` directories from project_path before running
+- `prompts/execute.md` instructs Claude Code to do the same before committing
+- Prevents "fatal: embedded git repository" errors that hit every project in Phase 2
+
+### 3. Self-Test Suite
+- `tests/test_claude_runner.py` — 18 tests covering ClaudeRunner itself
+- Tests: script existence, config loading, retry logic, pre-flight, git integration, end-to-end
+- All 18 tests passing
+
+---
+
+## Phase 3 Complete ✓
 
 All 8 projects built and merged to main:
 1. cron-watchdog — 22 tests
-2. wiki-scout — 18 tests  
+2. wiki-scout — 18 tests
 3. ta-batch-runner — 34 tests
 4. skills-hub-cli — 46 tests
 5. report-card-generator — 40 tests
@@ -71,6 +92,11 @@ All 8 projects built and merged to main:
 7. env-audit-cli — 23 tests
 8. voice-transcript-processor — 19 tests
 **Total: 223 tests**
+
+ClaudeRunner improvements:
+- retry-until-green with exponential backoff
+- project pre-flight .git strip
+- self-test suite (18 tests)
 
 ---
 
