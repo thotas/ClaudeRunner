@@ -366,38 +366,58 @@ $task_gr"
 }
 
 # ── Claude Code invocation ────────────────────────────────────────────
+RETRY_MAX="${RETRY_MAX:-3}"
+RETRY_BASE_DELAY="${RETRY_BASE_DELAY:-5}"
+
 run_claude() {
     local prompt_text="$1"
     local working_dir="${2:-$RUNNER_DIR}"
 
     local output
     local exit_code=0
+    local attempt=0
 
     log_debug "Invoking Claude Code in: $working_dir"
     log_debug "Prompt length: ${#prompt_text} chars"
+    log_debug "Retry max: $RETRY_MAX"
 
-    output="$(
-        cd "$working_dir" && \
-        ANTHROPIC_BASE_URL="$MINIMAX_BASE_URL" \
-        ANTHROPIC_AUTH_TOKEN="$MINIMAX_AUTH_TOKEN" \
-        ANTHROPIC_API_KEY="" \
-        ANTHROPIC_MODEL="$MINIMAX_MODEL" \
-        ANTHROPIC_DEFAULT_SONNET_MODEL="$MINIMAX_MODEL" \
-        ANTHROPIC_DEFAULT_OPUS_MODEL="$MINIMAX_MODEL" \
-        CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 \
-        "$CLAUDE_BIN" --dangerously-skip-permissions \
-            -p "$prompt_text" \
-            --output-format "$CLAUDE_OUTPUT_FORMAT" \
-            2>>"$LOG_FILE"
-    )" || exit_code=$?
+    until [ "$attempt" -ge "$RETRY_MAX" ]; do
+        attempt=$((attempt + 1))
+        log_info "Claude Code attempt $attempt/$RETRY_MAX"
 
-    if [ $exit_code -ne 0 ]; then
-        log_error "Claude Code exited with code $exit_code"
-        echo "$output"
-        return $exit_code
-    fi
+        output="$(
+            cd "$working_dir" && \
+            ANTHROPIC_BASE_URL="$MINIMAX_BASE_URL" \
+            ANTHROPIC_AUTH_TOKEN="$MINIMAX_AUTH_TOKEN" \
+            ANTHROPIC_API_KEY="" \
+            ANTHROPIC_MODEL="$MINIMAX_MODEL" \
+            ANTHROPIC_DEFAULT_SONNET_MODEL="$MINIMAX_MODEL" \
+            ANTHROPIC_DEFAULT_OPUS_MODEL="$MINIMAX_MODEL" \
+            CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 \
+            "$CLAUDE_BIN" --dangerously-skip-permissions \
+                -p "$prompt_text" \
+                --output-format "$CLAUDE_OUTPUT_FORMAT" \
+                2>>"$LOG_FILE"
+        )" && exit_code=$? || exit_code=$?
 
+        if [ $exit_code -eq 0 ]; then
+            log_info "Claude Code succeeded on attempt $attempt"
+            echo "$output"
+            return 0
+        fi
+
+        log_warn "Claude Code failed with exit code $exit_code (attempt $attempt/$RETRY_MAX)"
+
+        if [ "$attempt" -lt "$RETRY_MAX" ]; then
+            local delay=$((RETRY_BASE_DELAY * attempt))
+            log_info "Retrying in ${delay}s (exponential backoff)..."
+            sleep "$delay"
+        fi
+    done
+
+    log_error "Claude Code failed after $RETRY_MAX attempts"
     echo "$output"
+    return $exit_code
 }
 
 # ── Phase 1: Review & Enrich ─────────────────────────────────────────
